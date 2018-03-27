@@ -24,9 +24,23 @@ user = {
     'password': None    
 }
 
+hello_message = """
+Hello. I am an Instapaper bot that'll help you save articles to your Instapaper account directly from Telegram.
+In the current version (v0.1) I can only check for existing of your account in Instapaper.
+
+Availible commands:
+    /start — this hello message
+    /try_auth — check for account existing
+"""
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
+    bot.send_message(message.chat.id, hello_message)
+
+
+@bot.message_handler(commands=['try_auth'])
+def ask_for_data(message):
     global user
     user['username'] = None
     user['password'] = None
