@@ -6,8 +6,10 @@ import os
 from flask import Flask, request
 
 import requests
+import pickle
 
 from config import telegram_token, app_url
+import messages
 
 bot = telebot.TeleBot(telegram_token)
 
@@ -24,22 +26,19 @@ user = {
     'password': None    
 }
 
-hello_message = """
-Hello. I am an Instapaper bot that'll help you save articles to your Instapaper account directly from Telegram.
-In the current version (v0.1) I can only check for existing of your account in Instapaper.
-
-Availible commands:
-    /start — this hello message
-    /try_auth — check for account existing
-"""
+with open('users.pkl', 'rb') as file:
+    users = pickle.load(file)
 
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, hello_message)
+    bot.send_message(message.chat.id, messages.hello)
+
+    if message.chat.id not in users:
+        bot.send_message(message.chat.id, messages.auth)
 
 
-@bot.message_handler(commands=['try_auth'])
+@bot.message_handler(commands=['auth'])
 def ask_for_data(message):
     global user
     user['username'] = None
@@ -55,16 +54,21 @@ def ask_for_data(message):
 
 
 @bot.message_handler(content_types=['text'], func=lambda message: message.text == 'DONE')
-def try_auth(message):
+def auth(message):
     markup = types.ReplyKeyboardHide()
 
     response = requests.get(method['auth'], params=user)
 
     if response.status_code == 200:
-        bot.send_message(message.chat.id, 'Your username and password are valid.', reply_markup=markup)
+        bot.send_message(message.chat.id, 'You are successfully authorized.', reply_markup=markup)
+
+        users[message.chat.id] = (user['username'], user['password'])
+
+        with open('users.pkl', 'wb') as file:
+            pickle.dump(users, file, pickle.HIGHEST_PROTOCOL)
 
     elif response.status_code == 403:
-        bot.send_message(message.chat.id, 'Invalid username or password.', reply_markup=markup)
+        bot.send_message(message.chat.id, 'Invalid username or password. Try again: /auth', reply_markup=markup)
 
     else: # status_code == 500
         bot.send_message(message.chat.id, 'The service encountered an error. Please try again later.', reply_markup=markup)
