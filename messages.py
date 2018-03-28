@@ -14,3 +14,15 @@ First, you need to authorize your Instapaper account.
 
 Just use the /auth command to do this.
 """
+
+auth_warning = """
+*Attention!*
+
+You are already authorized. If you add a new account, the last one will be rewrited.
+"""
+
+auth_requirement = """
+You can't add urls to your Instapaper account without authorization.
+
+To authorize use /auth command.
+"""

@@ -53,6 +53,15 @@ def ask_for_data(message):
     global user
     user['username'], user['password'] = users.get(message.chat.id, (None, None))
 
+    if command == 'auth' and user['username'] != None:
+        bot.send_message(message.chat.id, messages.auth_warning, parse_mode='Markdown')
+
+        user['username'], user['password'] = (None, None)
+
+    if command == 'add' and user['username'] == None:
+        bot.send_message(message.chat.id, messages.auth_requirement, parse_mode='Markdown')
+        return None
+
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
     btn = types.KeyboardButton('DONE')
