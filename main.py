@@ -22,6 +22,8 @@ method = {
     'add' : url + 'add'
 }
 
+command = None
+
 user = {
     'username': None,
     'password': None
@@ -45,15 +47,15 @@ def start(message):
 
 @bot.message_handler(commands=['auth', 'add'])
 def ask_for_data(message):
-    user_id = message.chat.id
+    global command
     command = message.text[1:]
 
     global user
-    user['username'], user['password'] = users.get(user_id, (None, None))
+    user['username'], user['password'] = users.get(message.chat.id, (None, None))
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
-    btn = types.KeyboardButton(command.upper())
+    btn = types.KeyboardButton('DONE')
 
     markup.add(btn)
 
@@ -65,38 +67,30 @@ def ask_for_data(message):
     bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=markup)
 
 
-@bot.message_handler(content_types=['text'], func=lambda message: message.text == 'AUTH')
-def auth(message):
+@bot.message_handler(content_types=['text'], func=lambda message: message.text == 'DONE')
+def act(message):
     markup = types.ReplyKeyboardHide()
 
-    response = requests.get(method['auth'], params=user)
+    response = requests.get(method[command], params={**user, **data})
 
     if response.status_code == 200:
-        bot.send_message(message.chat.id, 'You are successfully authorized.', reply_markup=markup)
+        text = "You are successfully authorized."
 
         users[message.chat.id] = (user['username'], user['password'])
 
         with open('users.pkl', 'wb') as file:
             pickle.dump(users, file, pickle.HIGHEST_PROTOCOL)
 
+    elif response.status_code == 201:
+        text = "URL has been successfully added to your Instapaper account."
+
     elif response.status_code == 403:
-        bot.send_message(message.chat.id, 'Invalid username or password. Try again: /auth', reply_markup=markup)
+        text = "Invalid username or password. Try again: /auth."
 
     else: # status_code == 500
-        bot.send_message(message.chat.id, 'The service encountered an error. Please try again later.', reply_markup=markup)
+        text = "The service encountered an error. Please try again later."
 
-
-@bot.message_handler(content_types=['text'], func=lambda message: message.text == 'ADD')
-def add(message):
-    markup = types.ReplyKeyboardHide()
-
-    response = requests.get(method['add'], params={**user, **data})
-
-    if response.status_code == 201:
-        bot.send_message(message.chat.id, 'URL has been successfully added to your Instapaper account.', reply_markup=markup)
-
-    else: # status_code == 500
-        bot.send_message(message.chat.id, 'The service encountered an error. Please try again later.', reply_markup=markup)
+    bot.send_message(message.chat.id, text, reply_markup=markup)
 
 
 @bot.message_handler(content_types=['text'])
