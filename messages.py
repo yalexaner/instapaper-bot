@@ -1,11 +1,12 @@
 hello = """
 Hello. I am an Instapaper bot that'll help you save articles to your Instapaper account directly from Telegram.
 
-In the current version (v0.1) I can only check for existing of your account in Instapaper.
+In the current version (v0.1.1) I can only check for existing of your account in Instapaper.
 
 Availible commands:
-    /start — this hello message
-    /auth — check for account existing
+    /start — shows this hello message
+    /auth  — checks for account existing
+    /add   — adds url to an Instapaper account
 """
 
 auth = """

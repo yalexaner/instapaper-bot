@@ -18,12 +18,17 @@ server = Flask(__name__)
 url = 'https://www.instapaper.com/api/'
 
 method = {
-    'auth': url + 'authenticate'
+    'auth': url + 'authenticate',
+    'add' : url + 'add'
 }
 
 user = {
     'username': None,
-    'password': None    
+    'password': None
+}
+
+data = {
+    'url': None
 }
 
 with open('users.pkl', 'rb') as file:
@@ -38,22 +43,29 @@ def start(message):
         bot.send_message(message.chat.id, messages.auth)
 
 
-@bot.message_handler(commands=['auth'])
+@bot.message_handler(commands=['auth', 'add'])
 def ask_for_data(message):
+    user_id = message.chat.id
+    command = message.text[1:]
+
     global user
-    user['username'] = None
-    user['password'] = None
+    user['username'], user['password'] = users.get(user_id, (None, None))
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
-    btn = types.KeyboardButton('DONE')
+    btn = types.KeyboardButton(command.upper())
 
     markup.add(btn)
 
-    bot.send_message(message.chat.id, "Send me your *Login* and *Password*:", parse_mode='Markdown', reply_markup=markup)
+    if command == 'auth':
+        text = "Send me your *Login* and *Password*:"
+    else:
+        text = "Send me *URL*:"
+
+    bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=markup)
 
 
-@bot.message_handler(content_types=['text'], func=lambda message: message.text == 'DONE')
+@bot.message_handler(content_types=['text'], func=lambda message: message.text == 'AUTH')
 def auth(message):
     markup = types.ReplyKeyboardHide()
 
@@ -74,12 +86,27 @@ def auth(message):
         bot.send_message(message.chat.id, 'The service encountered an error. Please try again later.', reply_markup=markup)
 
 
+@bot.message_handler(content_types=['text'], func=lambda message: message.text == 'ADD')
+def add(message):
+    markup = types.ReplyKeyboardHide()
+
+    response = requests.get(method['add'], params={**user, **data})
+
+    if response.status_code == 201:
+        bot.send_message(message.chat.id, 'URL has been successfully added to your Instapaper account.', reply_markup=markup)
+
+    else: # status_code == 500
+        bot.send_message(message.chat.id, 'The service encountered an error. Please try again later.', reply_markup=markup)
+
+
 @bot.message_handler(content_types=['text'])
 def get_data(message):
     if not user['username']:
         user['username'] = message.text
-    else:
+    elif not user['password']:
         user['password'] = message.text
+    else:
+        data['url'] = message.text
 
 
 @server.route("/bot", methods=['POST'])
