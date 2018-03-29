@@ -8,10 +8,9 @@ from flask import Flask, request
 import requests
 import pickle
 
-from config import telegram_token, app_url
 import messages
 
-bot = telebot.TeleBot(telegram_token)
+bot = telebot.TeleBot(os.environ['telegram_token'])
 
 server = Flask(__name__)
 
@@ -39,7 +38,9 @@ with open('users.pkl', 'rb') as file:
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, messages.hello)
+    markup = types.ReplyKeyboardHide()
+
+    bot.send_message(message.chat.id, messages.hello, reply_markup=markup)
 
     if message.chat.id not in users:
         bot.send_message(message.chat.id, messages.auth)
@@ -121,7 +122,7 @@ def get_message():
 @server.route("/")
 def webhook():
     bot.remove_webhook()
-    bot.set_webhook(url="{}/bot".format(app_url))
+    bot.set_webhook(url="{}/bot".format(os.environ['app_url']))
     return "!", 200
 
 
