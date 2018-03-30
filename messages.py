@@ -1,16 +1,14 @@
 hello = """
 Hello. I am an Instapaper bot that'll help you save articles to your Instapaper account directly from Telegram.
 
-In the current version (v0.2) I can authorize you and save your urls to your Instapaper account.
-
 Availible commands:
     /start — shows this hello message
     /auth  — authorizes you
     /add   — adds url to an Instapaper account
 """
 
-auth = """
-First, you need to authorize your Instapaper account.
+auth_first = """
+To start using me you need to authorize your Instapaper account.
 
 Just use the /auth command to do this.
 """

@@ -47,7 +47,7 @@ def start(message):
     bot.send_message(message.chat.id, messages.hello, reply_markup=markup)
 
     if message.chat.id not in users:
-        bot.send_message(message.chat.id, messages.auth)
+        bot.send_message(message.chat.id, messages.auth_first)
 
 
 @bot.message_handler(commands=['auth', 'add'])
@@ -76,7 +76,7 @@ def ask_for_data(message):
     markup.add(btn)
 
     if command == 'auth':
-        text = "Send me your *Login* and *Password*:"
+        text = "Send me your *Email* or *Username* and *Password, if you have one*:"
     else:
         text = "Send me *URL*:"
 
@@ -98,10 +98,10 @@ def act(message):
             pickle.dump(users, file, pickle.HIGHEST_PROTOCOL)
 
     elif response.status_code == 201:
-        text = "URL has been successfully added to your Instapaper account."
+        text = "URL has been successfully added."
 
     elif response.status_code == 403:
-        text = "Invalid username or password. Try again: /auth."
+        text = "Invalid username or password. Please try again: /auth."
 
     else: # status_code == 500
         text = "The service encountered an error. Please try again later."
