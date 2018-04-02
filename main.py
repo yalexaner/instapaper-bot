@@ -5,102 +5,96 @@ from telebot import types
 import os
 from flask import Flask, request
 
-import requests
-import pickle
+from instapaper import Instapaper
 
 import messages
 
 bot = telebot.TeleBot(os.environ['telegram_token'])
 
+instapaper = None
+
 server = Flask(__name__)
 
-url = 'https://www.instapaper.com/api/'
+data = []
 
-method = {
-    'auth': url + 'authenticate',
-    'add' : url + 'add'
-}
-
-command = None
-
-user = {
-    'username': None,
-    'password': None
-}
-
-data = {
-    'url': None
-}
-
-if not os.path.exists('users.pkl'):
-    with open('users.pkl', 'wb') as file:
-        pickle.dump(dict(), file, pickle.HIGHEST_PROTOCOL)
-
-with open('users.pkl', 'rb') as file:
-    users = pickle.load(file)
 
 
 @bot.message_handler(commands=['start'])
 def start(message):
+    global instapaper
+    instapaper = Instapaper(message.chat.id) if not instapaper else instapaper
+
+    global data
+    data = []
+
     markup = types.ReplyKeyboardHide()
 
     bot.send_message(message.chat.id, messages.hello, reply_markup=markup)
 
-    if message.chat.id not in users:
+    if not instapaper.is_authorized():
         bot.send_message(message.chat.id, messages.auth_first)
 
 
-@bot.message_handler(commands=['auth', 'add'])
+@bot.message_handler(commands=['auth'])
 def ask_for_data(message):
-    global command
-    command = message.text[1:]
+    global instapaper
+    instapaper = Instapaper(message.chat.id) if not instapaper else instapaper
 
-    global user
-    user['username'], user['password'] = users.get(message.chat.id, (None, None))
+    global data
+    data = []
 
-    markup = types.ReplyKeyboardHide()
+    if instapaper.is_authorized():
+        bot.send_message(message.chat.id, messages.auth_warning, parse_mode='Markdown', reply_markup=types.ReplyKeyboardHide())
 
-    if command == 'auth' and user['username'] != None:
-        bot.send_message(message.chat.id, messages.auth_warning, parse_mode='Markdown', reply_markup=markup)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
-        user['username'], user['password'] = (None, None)
+    btn = types.KeyboardButton('Auth')
 
-    if command == 'add' and user['username'] == None:
-        bot.send_message(message.chat.id, messages.auth_requirement, parse_mode='Markdown', reply_markup=markup)
+    markup.add(btn)
+
+    text = "Send me your *Email* or *Username* and *Password, if you have one*:"
+    bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=markup)
+
+
+@bot.message_handler(commands=['add'])
+def ask_for_url(message):
+    global instapaper
+    instapaper = Instapaper(message.chat.id) if not instapaper else instapaper
+
+    global data
+    data = []
+
+    if not instapaper.is_authorized():
+        bot.send_message(message.chat.id, messages.auth_requirement, parse_mode='Markdown', reply_markup=types.ReplyKeyboardHide())
+        
         return None
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
-    btn = types.KeyboardButton('DONE')
+    btn = types.KeyboardButton('Add')
 
     markup.add(btn)
 
-    if command == 'auth':
-        text = "Send me your *Email* or *Username* and *Password, if you have one*:"
-    else:
-        text = "Send me *URL*:"
-
+    text = "Send me *URL*:"
     bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=markup)
 
 
-@bot.message_handler(content_types=['text'], func=lambda message: message.text == 'DONE')
+@bot.message_handler(content_types=['text'], regexp='Auth|Add')
 def act(message):
     markup = types.ReplyKeyboardHide()
 
-    response = requests.get(method[command], params={**user, **data})
+    if message.text == 'Auth':
+        status_code = instapaper.auth(*data)
+    else:
+        status_code = instapaper.add(*data)
 
-    if response.status_code == 200:
+    if status_code == 200:
         text = "You are successfully authorized."
 
-        users[message.chat.id] = (user['username'], user['password'])
-
-        with open('users.pkl', 'wb') as file:
-            pickle.dump(users, file, pickle.HIGHEST_PROTOCOL)
-
-    elif response.status_code == 201:
+    elif status_code == 201:
         text = "URL has been successfully added."
 
-    elif response.status_code == 403:
+    elif status_code == 403:
         text = "Invalid username or password. Please try again: /auth."
 
     else: # status_code == 500
@@ -111,12 +105,7 @@ def act(message):
 
 @bot.message_handler(content_types=['text'])
 def get_data(message):
-    if not user['username']:
-        user['username'] = message.text
-    elif not user['password']:
-        user['password'] = message.text
-    else:
-        data['url'] = message.text
+    data.append(message.text)
 
 
 @server.route("/bot", methods=['POST'])

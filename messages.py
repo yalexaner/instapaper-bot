@@ -1,3 +1,5 @@
+# coding=utf-8
+
 hello = """
 Hello. I am an Instapaper bot that'll help you save articles to your Instapaper account directly from Telegram.
 
