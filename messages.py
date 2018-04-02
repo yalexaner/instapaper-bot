@@ -18,7 +18,7 @@ Just use the /auth command to do this.
 auth_warning = """
 *Attention!*
 
-You are already authorized. If you add a new account, the last one will be rewrited.
+You are already authorized. If you add a new account, the last one will be rewrited. To cancel use /cancel command.
 """
 
 auth_requirement = """

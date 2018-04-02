@@ -79,6 +79,17 @@ def ask_for_url(message):
     bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=markup)
 
 
+@bot.message_handler(commands=['cancel'])
+def cancel(message):
+    markup = types.ReplyKeyboardHide()
+
+    global data
+    data = []
+
+    text = "Canceled. What are we going to do next?"
+    bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=markup)
+
+
 @bot.message_handler(content_types=['text'], regexp='Auth|Add')
 def act(message):
     markup = types.ReplyKeyboardHide()
