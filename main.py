@@ -16,6 +16,7 @@ instapaper = None
 server = Flask(__name__)
 
 data = []
+command = None
 
 
 @bot.message_handler(commands=['start'])
@@ -23,8 +24,10 @@ def start(message):
     global instapaper
     instapaper = Instapaper(message.chat.id) if not instapaper else instapaper
 
-    global data
-    data = []
+    data.clear()
+
+    global command
+    command = None
 
     markup = types.ReplyKeyboardHide()
 
@@ -39,8 +42,10 @@ def ask_for_data(message):
     global instapaper
     instapaper = Instapaper(message.chat.id) if not instapaper else instapaper
 
-    global data
-    data = []
+    data.clear()
+
+    global command
+    command = message.text
 
     if instapaper.is_authorized():
         bot.send_message(message.chat.id, messages.auth_warning, parse_mode='Markdown', reply_markup=types.ReplyKeyboardHide())
@@ -60,8 +65,10 @@ def ask_for_url(message):
     global instapaper
     instapaper = Instapaper(message.chat.id) if not instapaper else instapaper
 
-    global data
-    data = []
+    data.clear()
+
+    global command
+    command = message.text
 
     if not instapaper.is_authorized():
         bot.send_message(message.chat.id, messages.auth_requirement, parse_mode='Markdown', reply_markup=types.ReplyKeyboardHide())
@@ -78,12 +85,28 @@ def ask_for_url(message):
     bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=markup)
 
 
+@bot.message_handler(commands=['adding_mode'])
+def adding_mode(message):
+    global instapaper
+    instapaper = Instapaper(message.chat.id) if not instapaper else instapaper
+
+    data.clear()
+
+    global command
+    command = message.text
+
+    text = "Send me urls (each one in a separate message) and I'll be saving them."
+    bot.send_message(message.chat.id, text)
+
+
 @bot.message_handler(commands=['cancel'])
 def cancel(message):
     markup = types.ReplyKeyboardHide()
 
-    global data
-    data = []
+    data.clear()
+
+    global command
+    command = None
 
     text = "Canceled. What are we going to do next?"
     bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=markup)
@@ -93,29 +116,34 @@ def cancel(message):
 def act(message):
     markup = types.ReplyKeyboardHide()
 
+    status_codes = []
+
+    msg = {
+        200: "You are successfully authorized.",
+        201: "URL has been successfully added.",
+        403: "Invalid username or password. Please try again: /auth.",
+        500: "The service encountered an error. Please try again later."
+    }
+
     if message.text == 'Auth':
-        status_code = instapaper.auth(*data)
+        status_codes.append(instapaper.auth(*data))
+
     else:
-        status_code = instapaper.add(*data)
+        for url in data:
+            status_codes.append(instapaper.add(url))
 
-    if status_code == 200:
-        text = "You are successfully authorized."
+    data.clear()
 
-    elif status_code == 201:
-        text = "URL has been successfully added."
-
-    elif status_code == 403:
-        text = "Invalid username or password. Please try again: /auth."
-
-    else: # status_code == 500
-        text = "The service encountered an error. Please try again later."
-
-    bot.send_message(message.chat.id, text, reply_markup=markup)
+    for status_code in status_codes:
+        bot.send_message(message.chat.id, msg[status_code], reply_markup=markup)
 
 
 @bot.message_handler(content_types=['text'])
 def get_data(message):
     data.append(message.text)
+
+    if command == '/adding_mode':
+        act(message)
 
 
 @server.route("/bot", methods=['POST'])
