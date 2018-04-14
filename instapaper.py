@@ -1,23 +1,22 @@
 # coding=utf-8
 
 import requests
-import pickle
+import psycopg2
 import os
+
+db_url = os.environ["DATABASE_URL"]
+
+connection = psycopg2.connect(db_url)
+cursor = connection.cursor()
 
 
 class Instapaper(object):
 
 
     def __init__(self, user_id):
-        if not os.path.exists('users.pkl'):
-            with open('users.pkl', 'wb') as file:
-                pickle.dump(dict(), file, pickle.HIGHEST_PROTOCOL)
+        cursor.execute("SELECT username, password FROM users WHERE id = %s;", (user_id,))
 
-        with open('users.pkl', 'rb') as file:
-            users = pickle.load(file)
-
-        self._username, self._password = users.get(user_id, (None, None))
-
+        self._username, self._password = cursor.fetchone() if cursor.fetchone() else (None, None)
         self._user_id = user_id
         self._url = 'https://www.instapaper.com/api/'
 
@@ -40,13 +39,14 @@ class Instapaper(object):
         response = requests.get(self._url + 'authenticate', params=data)
 
         if response.status_code == 200:
-            with open('users.pkl', 'rb') as file:
-                users = pickle.load(file)
+            try:
+                cursor.execute("INSERT INTO users VALUES (%s, %s, %s);", (self._user_id, username, password))
 
-            users[self._user_id] = (username, password)
+            except psycopg2.IntegrityError:
+                cursor.execute("UPDATE users SET id = %(id)s WHERE id = %(id)s;", {'id': user_id})
 
-            with open('users.pkl', 'wb') as file:
-                pickle.dump(users, file, pickle.HIGHEST_PROTOCOL)
+            connection.commit()
+
 
         return response.status_code
 

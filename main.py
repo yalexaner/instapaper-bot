@@ -18,7 +18,6 @@ server = Flask(__name__)
 data = []
 
 
-
 @bot.message_handler(commands=['start'])
 def start(message):
     global instapaper
