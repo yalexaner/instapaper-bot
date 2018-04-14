@@ -4,10 +4,11 @@ hello = """
 Hello. I am an Instapaper bot that'll help you save articles to your Instapaper account directly from Telegram.
 
 Availible commands:
-    /start 	— shows this hello message
-    /auth  	— authorizes you
-    /add   	— adds url to an Instapaper account
-    /cancel	— cancels any action
+    /start			— shows this hello message
+    /auth 			— authorizes you
+    /add			— adds url to an Instapaper account
+    /adding_mode 	— adds url without command
+    /cancel 		— cancels any action
 """
 
 auth_first = """

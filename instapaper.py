@@ -16,7 +16,9 @@ class Instapaper(object):
     def __init__(self, user_id):
         cursor.execute("SELECT username, password FROM users WHERE id = %s;", (user_id,))
 
-        self._username, self._password = cursor.fetchone() if cursor.fetchone() else (None, None)
+        data = cursor.fetchone()
+
+        self._username, self._password = data if data else (None, None)
         self._user_id = user_id
         self._url = 'https://www.instapaper.com/api/'
 
