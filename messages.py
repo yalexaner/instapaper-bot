@@ -6,8 +6,8 @@ Hello. I am an Instapaper bot that'll help you save articles to your Instapaper 
 Availible commands:
     /start			— shows this hello message
     /auth 			— authorizes you
-    /add			— adds url to an Instapaper account
-    /adding_mode 	— adds url without command
+    /add			— adds urls to an Instapaper account
+    /adding_mode 	— adds urls without command
     /cancel 		— cancels any action
 """
 
