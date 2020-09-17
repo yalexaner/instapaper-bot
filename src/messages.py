@@ -12,6 +12,14 @@ Hi, I am going to help you save the articles that you will send me to your Insta
 There are several useful commands that I'm going to tell you about a little bit later, but first, I need to get you authorized, so I can do my job :)
 """
 
+username_request = """
+Send me your *username* or *email address*:
+"""
+
+password_request = """
+And now send me your *password*, if you **have** one:
+"""
+
 help = """
 Available commands:
     /start			— shows hello message

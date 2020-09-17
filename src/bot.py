@@ -10,22 +10,60 @@ from src.instapaper import Instapaper
 
 bot = TeleBot(os.environ['telegram_token'])
 
+# user data for Instapaper
 instapaper = Instapaper()
 
-server = Flask(__name__)
+# current state
+state = utils.State.IDLE
 
-data = []
-command = None
+server = Flask(__name__)
 
 
 @bot.message_handler(commands=['start'])
 def start(message):
+    instapaper.user_id = message.chat.id
+
     if instapaper.is_authorized():
+        # creating action buttons
         msg_text, markup = utils.get_action_choices()
     else:
+        # creating button for authentication
         msg_text, markup = utils.get_auth_suggestion()
 
     bot.send_message(message.chat.id, msg_text, reply_markup=markup)
+
+
+@bot.message_handler(regexp="OK. Let's do it")
+def start_authorizing(message):
+    ask_for_username(message.chat.id)
+
+
+def ask_for_username(user_id):
+    state.action = utils.State.GET_USERNAME
+    bot.send_message(user_id, messages.username_request, parse_mode='Markdown',
+                     reply_markup=types.ReplyKeyboardRemove)
+
+
+@bot.message_handler(content_types=['text'], func=lambda: state.action == utils.State.GET_USERNAME)
+def get_username(message):
+    instapaper.username = message.text
+    ask_for_password(message.chat.id)
+
+
+def ask_for_password(chat_id):
+    state.action = utils.State.GET_PASSWORD
+    bot.send_message(chat_id, messages.password_request, parse_mode='Markdown',
+                     reply_markup=types.ReplyKeyboardRemove)
+
+
+@bot.message_handler(content_types=['text'], func=lambda: state.action == utils.State.GET_PASSWORD)
+def get_password(message):
+    instapaper.password = message.text
+    authorize()
+
+
+def authorize():
+    instapaper.auth()
 
 
 @bot.message_handler(commands=['auth'])

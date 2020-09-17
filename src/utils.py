@@ -1,6 +1,17 @@
+import enum
+from enum import Enum
+
 from telebot import types
 
 from src import messages
+
+
+class State(Enum):
+    IDLE = enum.auto
+    GET_USERNAME = enum.auto
+    GET_PASSWORD = enum.auto
+    ADD_URL = enum.auto
+    ADDING_MODE = enum.auto
 
 
 def get_auth_suggestion():
