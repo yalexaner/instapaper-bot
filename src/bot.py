@@ -5,12 +5,12 @@ import os
 from flask import Flask, request
 from telebot import TeleBot, types
 
-from src import messages
+from src import messages, utils
 from src.instapaper import Instapaper
 
 bot = TeleBot(os.environ['telegram_token'])
 
-instapaper = None
+instapaper = Instapaper()
 
 server = Flask(__name__)
 
@@ -20,20 +20,12 @@ command = None
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    global instapaper
-    instapaper = Instapaper(message.chat.id) if not instapaper else instapaper
+    if instapaper.is_authorized():
+        msg_text, markup = utils.get_action_choices()
+    else:
+        msg_text, markup = utils.get_auth_suggestion()
 
-    data.clear()
-
-    global command
-    command = None
-
-    markup = types.ReplyKeyboardHide()
-
-    bot.send_message(message.chat.id, messages.hello, reply_markup=markup)
-
-    if not instapaper.is_authorized():
-        bot.send_message(message.chat.id, messages.auth_first)
+    bot.send_message(message.chat.id, msg_text, reply_markup=markup)
 
 
 @bot.message_handler(commands=['auth'])

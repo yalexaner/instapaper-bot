@@ -1,14 +1,25 @@
 # coding=utf-8
 
-hello = """
-Hello. I am an Instapaper bot that'll help you save articles to your Instapaper account directly from Telegram.
+authorized_hello = """
+We've already met :)
 
+What do wo want to do next?
+"""
+
+unauthorized_hello = """
+Hi, I am going to help you save the articles that you will send me to your Instapaper account.
+
+There are several useful commands that I'm going to tell you about a little bit later, but first, I need to get you authorized, so I can do my job :)
+"""
+
+help = """
 Available commands:
-    /start			— shows this hello message
+    /start			— shows hello message
     /auth 			— authorizes you
     /add			— adds urls to an Instapaper account
     /adding_mode 	— adds urls without command
     /cancel 		— cancels any action
+    /help           — lists all the commands
 """
 
 auth_first = """
