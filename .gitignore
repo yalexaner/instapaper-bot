@@ -1,5 +1,2 @@
-__pycache__/
-*.swp
-
-clean.py
-start
+.idea
+venv

@@ -3,7 +3,7 @@
 hello = """
 Hello. I am an Instapaper bot that'll help you save articles to your Instapaper account directly from Telegram.
 
-Availible commands:
+Available commands:
     /start			— shows this hello message
     /auth 			— authorizes you
     /add			— adds urls to an Instapaper account
@@ -20,7 +20,7 @@ Just use the /auth command to do this.
 auth_warning = """
 *Attention!*
 
-You are already authorized. If you add a new account, the last one will be rewrited. To cancel use /cancel command.
+You are already authorized. To cancel use /cancel command.
 """
 
 auth_requirement = """

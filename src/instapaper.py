@@ -1,8 +1,9 @@
 # coding=utf-8
 
-import requests
-import psycopg2
 import os
+
+import psycopg2
+import requests
 
 db_url = os.environ["DATABASE_URL"]
 
@@ -12,7 +13,6 @@ cursor = connection.cursor()
 
 class Instapaper(object):
 
-
     def __init__(self, user_id):
         cursor.execute("SELECT username, password FROM users WHERE id = %s;", (user_id,))
 
@@ -21,7 +21,6 @@ class Instapaper(object):
         self._username, self._password = data if data else (None, None)
         self._user_id = user_id
         self._url = 'https://www.instapaper.com/api/'
-
 
     def auth(self, username, password) -> int:
         """
@@ -49,9 +48,7 @@ class Instapaper(object):
 
             connection.commit()
 
-
         return response.status_code
-
 
     def add(self, url) -> int:
         """
@@ -68,7 +65,6 @@ class Instapaper(object):
         response = requests.get(self._url + 'add', params=data)
 
         return response.status_code
-
 
     def is_authorized(self) -> bool:
         """

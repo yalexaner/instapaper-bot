@@ -1,15 +1,14 @@
 # coding=utf-8
 
-import telebot
-from telebot import types
 import os
+
 from flask import Flask, request
+from telebot import TeleBot, types
 
-from instapaper import Instapaper
+from src import messages
+from src.instapaper import Instapaper
 
-import messages
-
-bot = telebot.TeleBot(os.environ['telegram_token'])
+bot = TeleBot(os.environ['telegram_token'])
 
 instapaper = None
 
@@ -48,7 +47,8 @@ def ask_for_data(message):
     command = message.text
 
     if instapaper.is_authorized():
-        bot.send_message(message.chat.id, messages.auth_warning, parse_mode='Markdown', reply_markup=types.ReplyKeyboardHide())
+        bot.send_message(message.chat.id, messages.auth_warning, parse_mode='Markdown',
+                         reply_markup=types.ReplyKeyboardHide())
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
@@ -71,8 +71,9 @@ def ask_for_url(message):
     command = message.text
 
     if not instapaper.is_authorized():
-        bot.send_message(message.chat.id, messages.auth_requirement, parse_mode='Markdown', reply_markup=types.ReplyKeyboardHide())
-        
+        bot.send_message(message.chat.id, messages.auth_requirement, parse_mode='Markdown',
+                         reply_markup=types.ReplyKeyboardHide())
+
         return None
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -161,5 +162,3 @@ def webhook():
 
 if __name__ == "__main__":
     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
-
-# bot.polling()
