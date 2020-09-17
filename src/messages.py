@@ -3,7 +3,7 @@
 authorized_hello = """
 We've already met :)
 
-What do wo want to do next?
+What do you want to do next?
 """
 
 unauthorized_hello = """
@@ -18,6 +18,14 @@ Send me your *username* or *email address*:
 
 password_request = """
 And now send me your *password*, if you **have** one:
+"""
+
+authorized = """
+You are authorized. So shall we start now?
+"""
+
+finish_authorization = """
+And, as I promised, here are all the available commands you can use. If you want to know what all of them do, use the "See help message" button. So, what do we do next?
 """
 
 help = """

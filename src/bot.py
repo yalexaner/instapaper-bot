@@ -25,10 +25,12 @@ def start(message):
 
     if instapaper.is_authorized():
         # creating action buttons
-        msg_text, markup = utils.get_action_choices()
+        msg_text = messages.authorized_hello
+        markup = utils.get_action_choices_markup()
     else:
         # creating button for authentication
-        msg_text, markup = utils.get_auth_suggestion()
+        msg_text = messages.unauthorized_hello
+        markup = utils.get_one_button_markup_with_text("OK. Let's do it")
 
     bot.send_message(message.chat.id, msg_text, reply_markup=markup)
 
@@ -39,7 +41,9 @@ def start_authorizing(message):
 
 
 def ask_for_username(user_id):
-    state.action = utils.State.GET_USERNAME
+    global state
+    state = utils.State.GET_USERNAME
+
     bot.send_message(user_id, messages.username_request, parse_mode='Markdown',
                      reply_markup=types.ReplyKeyboardRemove)
 
@@ -51,7 +55,9 @@ def get_username(message):
 
 
 def ask_for_password(chat_id):
-    state.action = utils.State.GET_PASSWORD
+    global state
+    state = utils.State.GET_PASSWORD
+
     bot.send_message(chat_id, messages.password_request, parse_mode='Markdown',
                      reply_markup=types.ReplyKeyboardRemove)
 
@@ -59,11 +65,23 @@ def ask_for_password(chat_id):
 @bot.message_handler(content_types=['text'], func=lambda: state.action == utils.State.GET_PASSWORD)
 def get_password(message):
     instapaper.password = message.text
-    authorize()
+    authorize(message.chat.id)
 
 
-def authorize():
+def authorize(chat_id):
+    global state
+    state = utils.State.IDLE
+
     instapaper.auth()
+
+    markup = utils.get_one_button_markup_with_text("OK. Let's start then")
+    bot.send_message(chat_id, messages.authorized, reply_markup=markup)
+
+
+@bot.message_handler(regexp="OK. Let's start then")
+def finish_authorization(chat_id):
+    markup = utils.get_action_choices_markup()
+    bot.send_message(chat_id, messages.finish_authorization, reply_markup=markup)
 
 
 @bot.message_handler(commands=['auth'])
