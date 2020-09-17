@@ -84,6 +84,18 @@ def finish_authorization(chat_id):
     bot.send_message(chat_id, messages.finish_authorization, reply_markup=markup)
 
 
+@bot.message_handler(regexp='See help message')
+def get_help_message(message):
+    markup = utils.get_one_button_markup_with_text('Thanks, I got it')
+    bot.send_message(message.chat.id, messages.help, parse_mode='Markdown', reply_markup=markup, )
+
+
+@bot.message_handler(regexp='Thanks, I got it')
+def close_help_message(message):
+    markup = utils.get_action_choices_markup()
+    bot.send_message(message.chat.id, messages.what_next, reply_markup=markup)
+
+
 @bot.message_handler(commands=['auth'])
 def ask_for_data(message):
     global instapaper
